@@ -1,9 +1,9 @@
 import { emptyCart, getCart } from '../cart/service.ts';
 import type { Order } from '../db/schema.ts';
-import { updateStock } from '../products/repository.ts';
+import { findProductById, updateStock } from '../products/repository.ts';
 import { getProduct } from '../products/service.ts';
 import { AppError } from '../shared/errors.ts';
-import { findOrderById, findOrdersByUser, insertOrder } from './repository.ts';
+import { findOrderById, findOrdersByUser, insertOrder, updateOrderStatus } from './repository.ts';
 
 /** Crea un pedido con el contenido del carrito, descuenta el stock y vacía el carrito. */
 export function checkout(userId: number): Order {
@@ -57,5 +57,31 @@ export function getOrder(orderId: number): Order {
   if (!order) {
     throw new AppError(404, 'ORDER_NOT_FOUND', `No existe el pedido ${orderId}`);
   }
+  return order;
+}
+
+/**
+ * Cancela un pedido del usuario que todavía no se ha enviado y devuelve sus
+ * unidades al stock. Los pedidos de otros usuarios se tratan como inexistentes.
+ */
+export function cancelOrder(userId: number, orderId: number): Order {
+  const order = findOrderById(orderId);
+  if (!order || order.userId !== userId) {
+    throw new AppError(404, 'ORDER_NOT_FOUND', `No existe el pedido ${orderId}`);
+  }
+  if (order.status !== 'pending') {
+    throw new AppError(
+      409,
+      'ORDER_NOT_CANCELLABLE',
+      `El pedido ${orderId} no se puede cancelar porque su estado es «${order.status}»`,
+    );
+  }
+
+  for (const item of order.items) {
+    const product = findProductById(item.productId);
+    if (product) updateStock(product.id, product.stock + item.quantity);
+  }
+
+  updateOrderStatus(order.id, 'cancelled');
   return order;
 }

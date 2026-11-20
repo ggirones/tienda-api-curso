@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ANA, api, authHeader, createCoupon, LUIS } from './helpers.ts';
+import { ANA, api, authHeader, createCoupon, createProduct, LUIS } from './helpers.ts';
 
 async function addToCart(userId: number, productId: number, quantity = 1) {
   return api()
@@ -211,6 +211,27 @@ describe('cupones', () => {
     expect(res.status).toBe(422);
     expect(res.body.error.code).toBe('COUPON_MIN_SUBTOTAL');
     expect(res.body.error.message).toContain('30,00');
+  });
+
+  it('el total no queda en negativo con un cupón fijo mayor que el subtotal (issue #1)', async () => {
+    const product = createProduct({ priceCents: 1295 });
+    createCoupon({ code: 'FIJO25', type: 'fixed', value: 2500 });
+    await addToCart(ANA, product.id);
+    await api()
+      .post('/api/cart/coupon')
+      .set(await authHeader(ANA))
+      .send({ code: 'FIJO25' });
+
+    const res = await api()
+      .get('/api/cart')
+      .set(await authHeader(ANA));
+
+    expect(res.body).toMatchObject({
+      couponCode: 'FIJO25',
+      subtotalCents: 1295,
+      discountCents: 1295,
+      totalCents: 0,
+    });
   });
 
   it('quita el cupón', async () => {

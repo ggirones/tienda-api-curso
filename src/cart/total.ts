@@ -14,7 +14,8 @@ export interface Totals {
 /** Calcula subtotal, descuento del cupón y total. Se usa en el carrito y al crear el pedido. */
 export function calculateTotals(lines: PricedLine[], coupon: Coupon | null): Totals {
   const subtotalCents = lines.reduce((sum, line) => sum + line.unitPriceCents * line.quantity, 0);
-  const discountCents = coupon ? couponDiscount(coupon, subtotalCents) : 0;
+  // El descuento nunca supera el subtotal, para que el total no quede en negativo
+  const discountCents = coupon ? Math.min(couponDiscount(coupon, subtotalCents), subtotalCents) : 0;
   return { subtotalCents, discountCents, totalCents: subtotalCents - discountCents };
 }
 

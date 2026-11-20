@@ -1,5 +1,5 @@
 import { db } from '../db/memory.ts';
-import type { Order } from '../db/schema.ts';
+import type { Order, OrderStatus } from '../db/schema.ts';
 
 export function insertOrder(data: Omit<Order, 'id'>): Order {
   const order: Order = { id: db.nextOrderId++, ...data };
@@ -14,4 +14,9 @@ export function findOrdersByUser(userId: number): Order[] {
 
 export function findOrderById(id: number): Order | undefined {
   return db.orders.find((order) => order.id === id);
+}
+
+export function updateOrderStatus(id: number, status: OrderStatus): void {
+  const order = findOrderById(id);
+  if (order) order.status = status;
 }

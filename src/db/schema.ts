@@ -37,7 +37,7 @@ export interface Cart {
   couponCode: string | null;
 }
 
-export type OrderStatus = 'pending' | 'shipped' | 'delivered';
+export type OrderStatus = 'pending' | 'shipped' | 'delivered' | 'cancelled';
 
 export interface OrderItem {
   productId: number;
