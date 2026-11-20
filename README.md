@@ -55,6 +55,7 @@ Las rutas de carrito y pedidos necesitan la cabecera `Authorization: Bearer <tok
 | `POST`   | `/api/orders`                | Crea un pedido con el contenido del carrito |
 | `GET`    | `/api/orders`                | Lista mis pedidos                           |
 | `GET`    | `/api/orders/:id`            | Devuelve un pedido                          |
+| `POST`   | `/api/orders/:id/cancel`     | Cancela un pedido pendiente                 |
 
 Ejemplo desde Git Bash, con el servidor arrancado:
 
